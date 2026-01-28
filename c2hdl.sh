@@ -7,8 +7,28 @@ C_FILES=()
 LD_ARGS=()
 U_NAMES=()
 OUTPUT_NAME="a.out.v"
+show_help() {
+  echo "Usage: $0 [options] -c <file.c> -u <symbol>"
+  echo ""
+  echo "Options:"
+  echo "  -h, --help       Show this help message"
+  echo "  -arch <arch>     RISC-V architecture (default: rv32e)"
+  echo "  -mabi <abi>      RISC-V ABI (default: ilp32e)"
+  echo "  -cc <compiler>   Compiler path (default: riscv32-linux-gnu-gcc)"
+  echo "  -o <file.o>      Output object file name"
+  echo "  -c <file.c>      Source file to compile (can be used multiple times)"
+  echo "  -u <symbol>      Keep symbol/entry point (can be used multiple times)"
+  echo "  -objdump <cmd>   Path to objdump utility"
+  echo ""
+  echo "Example:"
+  echo "  $0 -c tea.c -o tea.o -u tinyenc -u tinydec"
+  exit 0
+}
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      show_help
+      ;;
     -arch)
       ARCH="$2"
       shift 2
