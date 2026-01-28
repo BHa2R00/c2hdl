@@ -17,14 +17,14 @@ typedef struct
 
 void push_a(filo_t* f)
 {
-  f->a_top++;
   f->A[f->a_top] = f->a;
+  f->a_top++;
 }
 
 void pop_a(filo_t* f)
 {
-  f->a = f->A[f->a_top];
   f->a_top--;
+  f->a = f->A[f->a_top];
 }
 
 void swap(filo_t* f) 
@@ -117,7 +117,6 @@ int main()
   printf("sort\n");
   quicksort(&f);
   printf("pop\n");
-  f.a_top--;
   for(int k=0;k<75;k++) {
     pop_a(&f);
     printf("%8d  %8d\n", k, f.a);

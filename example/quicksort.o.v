@@ -1,4 +1,4 @@
-module quicksort (clk, rstb, setb, idle, pc, pc0, addr, size, valid, write, wdata, rdata, ready, s10, a20, a30, a40, a50, a00, s00, ra0, sp0);
+module quicksort (clk, rstb, setb, idle, pc, pc0, addr, size, valid, write, wdata, rdata, ready, s10, a20, a30, a50, a40, a00, s00, ra0, sp0);
 input clk, rstb;
 input setb;
 output reg idle;
@@ -10,11 +10,11 @@ output reg valid, write;
 output reg [31:0] wdata;
 input [31:0] rdata;
 input ready;
-input [31:0] s10, a20, a30, a40, a50, a00, s00, ra0, sp0;
+input [31:0] s10, a20, a30, a50, a40, a00, s00, ra0, sp0;
 wire [31:0] rdata_w = rdata >> (8*addr[1:0]);
 wire [15:0] rdata_h = rdata >> (8*addr[1:0]);
 wire [ 7:0] rdata_b = rdata >> (8*addr[1:0]);
-reg [31:0] zero, s1, a2, a3, a4, a5, a0, s0, ra, sp;
+reg [31:0] zero, s1, a2, a3, a5, a4, a0, s0, ra, sp;
 always@(negedge rstb or posedge clk) begin
   if(!rstb) begin
     zero <= 32'd0;
@@ -33,8 +33,8 @@ always@(negedge rstb or posedge clk) begin
       s1 <= s10;
       a2 <= a20;
       a3 <= a30;
-      a4 <= a40;
       a5 <= a50;
+      a4 <= a40;
       a0 <= a00;
       s0 <= s00;
       ra <= ra0;
@@ -66,26 +66,26 @@ always@(negedge rstb or posedge clk) begin
 'h00000008 : begin if(!valid && !ready) begin addr <= 0 + sp; valid <= 1; write <= 1; size <= 2; wdata <= s0; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //       C : addi s0 sp 8 
 'h0000000C : begin s0 <= $signed(sp) + $signed(8); end
-//  f->a_top++
-//      10 : lw a5 8 (a0) 
-'h00000010 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
-//      14 : addi a5 a5 1 
-'h00000014 : begin a5 <= $signed(a5) + $signed(1); end
-//      18 : sw a5 8 (a0) 
-'h00000018 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //  f->A[f->a_top] = f->a
-//      1C : lw a4 8 (a0) 
-'h0000001C : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
-//      20 : slli a4 a4 2 
-'h00000020 : begin a4 <= $unsigned(a4) << 2; end
-//      24 : lw a5 0 (a0) 
-'h00000024 : begin if(!valid && !ready) begin addr <= 0 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
-//      28 : add a5 a5 a4 
-'h00000028 : begin a5 <= $signed(a5) + $signed(a4); end
-//      2C : lw a4 4 (a0) 
-'h0000002C : begin if(!valid && !ready) begin addr <= 4 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
-//      30 : sw a4 0 (a5) 
-'h00000030 : begin if(!valid && !ready) begin addr <= 0 + a5; valid <= 1; write <= 1; size <= 2; wdata <= a4; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
+//      10 : lw a4 8 (a0) 
+'h00000010 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
+//      14 : slli a4 a4 2 
+'h00000014 : begin a4 <= $unsigned(a4) << 2; end
+//      18 : lw a5 0 (a0) 
+'h00000018 : begin if(!valid && !ready) begin addr <= 0 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
+//      1C : add a5 a5 a4 
+'h0000001C : begin a5 <= $signed(a5) + $signed(a4); end
+//      20 : lw a4 4 (a0) 
+'h00000020 : begin if(!valid && !ready) begin addr <= 4 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
+//      24 : sw a4 0 (a5) 
+'h00000024 : begin if(!valid && !ready) begin addr <= 0 + a5; valid <= 1; write <= 1; size <= 2; wdata <= a4; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
+//  f->a_top++
+//      28 : lw a5 8 (a0) 
+'h00000028 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
+//      2C : addi a5 a5 1 
+'h0000002C : begin a5 <= $signed(a5) + $signed(1); end
+//      30 : sw a5 8 (a0) 
+'h00000030 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //}
 //      34 : lw ra 4 (sp) 
 'h00000034 : begin if(!valid && !ready) begin addr <= 4 + sp; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) ra <= rdata_w; end
@@ -108,26 +108,26 @@ always@(negedge rstb or posedge clk) begin
 'h0000004C : begin if(!valid && !ready) begin addr <= 0 + sp; valid <= 1; write <= 1; size <= 2; wdata <= s0; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //      50 : addi s0 sp 8 
 'h00000050 : begin s0 <= $signed(sp) + $signed(8); end
-//  f->a = f->A[f->a_top]
-//      54 : lw a4 8 (a0) 
-'h00000054 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
-//      58 : slli a4 a4 2 
-'h00000058 : begin a4 <= $unsigned(a4) << 2; end
-//      5C : lw a5 0 (a0) 
-'h0000005C : begin if(!valid && !ready) begin addr <= 0 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
-//      60 : add a5 a5 a4 
-'h00000060 : begin a5 <= $signed(a5) + $signed(a4); end
-//      64 : lw a5 0 (a5) 
-'h00000064 : begin if(!valid && !ready) begin addr <= 0 + a5; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
-//      68 : sw a5 4 (a0) 
-'h00000068 : begin if(!valid && !ready) begin addr <= 4 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //  f->a_top--
-//      6C : lw a5 8 (a0) 
-'h0000006C : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
-//      70 : addi a5 a5 -1 
-'h00000070 : begin a5 <= $signed(a5) + $signed(-1); end
-//      74 : sw a5 8 (a0) 
-'h00000074 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
+//      54 : lw a5 8 (a0) 
+'h00000054 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
+//      58 : addi a5 a5 -1 
+'h00000058 : begin a5 <= $signed(a5) + $signed(-1); end
+//      5C : sw a5 8 (a0) 
+'h0000005C : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
+//  f->a = f->A[f->a_top]
+//      60 : lw a4 8 (a0) 
+'h00000060 : begin if(!valid && !ready) begin addr <= 8 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a4 <= rdata_w; end
+//      64 : slli a4 a4 2 
+'h00000064 : begin a4 <= $unsigned(a4) << 2; end
+//      68 : lw a5 0 (a0) 
+'h00000068 : begin if(!valid && !ready) begin addr <= 0 + a0; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
+//      6C : add a5 a5 a4 
+'h0000006C : begin a5 <= $signed(a5) + $signed(a4); end
+//      70 : lw a5 0 (a5) 
+'h00000070 : begin if(!valid && !ready) begin addr <= 0 + a5; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) a5 <= rdata_w; end
+//      74 : sw a5 4 (a0) 
+'h00000074 : begin if(!valid && !ready) begin addr <= 4 + a0; valid <= 1; write <= 1; size <= 2; wdata <= a5; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; pc <= pc; end end
 //}
 //      78 : lw ra 4 (sp) 
 'h00000078 : begin if(!valid && !ready) begin addr <= 4 + sp; valid <= 1; write <= 0; size <= 2; pc <= pc; end else if(valid && !ready) begin pc <= pc; end else if(valid && ready) begin valid <= 0; valid <= 0; pc <= pc; end if(ready) ra <= rdata_w; end

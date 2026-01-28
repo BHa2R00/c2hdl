@@ -68,7 +68,6 @@ int main()
   printf("sort\n");
   insertsort(&f);
   printf("pop\n");
-  //f.a_top--;
   for(int k=0;k<75;k++) {
     pop_a(&f);
     printf("%8d  %8d\n", k, f.a);
