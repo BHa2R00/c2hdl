@@ -21,7 +21,7 @@ show_help() {
   echo "  -objdump <cmd>   Path to objdump utility"
   echo ""
   echo "Example:"
-  echo "  $0 -c tea.c -o tea.o -u tinyenc -u tinydec"
+  echo "  $0 -c example/fibonacci.c -o example/fibonacci.o -u fibonacci"
   exit 0
 }
 while [[ $# -gt 0 ]]; do
