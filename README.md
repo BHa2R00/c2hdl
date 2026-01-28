@@ -15,7 +15,7 @@ Options:
   -objdump <cmd>   Path to objdump utility
 
 Example:
-  ./c2hdl.sh -c tea.c -o tea.o -u tinyenc -u tinydec
+  ./c2hdl.sh -c example/fibonacci.c -o example/fibonacci.o -u fibonacci
 </pre>
 
 ## example
