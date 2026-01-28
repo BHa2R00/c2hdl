@@ -21,3 +21,7 @@ Example:
 ## example
 ### quicksort
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214318_975x276_scrot.png)
+### tea
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214804_1007x270_scrot.png)
+### fibonacci
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214832_982x165_scrot.png)
