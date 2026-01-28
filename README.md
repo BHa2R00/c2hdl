@@ -17,3 +17,7 @@ Options:
 Example:
   ./c2hdl.sh -c tea.c -o tea.o -u tinyenc -u tinydec
 </pre>
+
+## example
+### quicksort
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214318_975x276_scrot.png)
