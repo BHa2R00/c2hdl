@@ -19,6 +19,8 @@ Example:
 </pre>
 
 ## example
+### insertsort
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128234450_973x197_scrot.png)
 ### quicksort
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214318_975x276_scrot.png)
 ### tea
