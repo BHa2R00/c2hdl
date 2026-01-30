@@ -3,25 +3,17 @@
 #endif
 #include <string.h>
 
-int min3(int a, int b, int c)
-{
-  int m = a;
-  if(b < m) m = b;
-  if(c < m) m = c;
-  return m;
-}
-
 int levenshtein(char* a, int a_len, char* b, int b_len)
 {
   if(a_len ==0) return b_len;
   if(b_len ==0) return a_len;
   int cost = (a[a_len-1] == b[b_len-1]) ? 0 : 1;
-  int m = min3(
-    levenshtein(a, a_len-1, b, b_len) +1, 
-    levenshtein(a, a_len, b, b_len-1) +1, 
-    levenshtein(a, a_len-1, b, b_len-1) +cost
-  );
-  return m;
+  int d = levenshtein(a, a_len-1, b, b_len) +1;
+  int i = levenshtein(a, a_len, b, b_len-1) +1;
+  int s = levenshtein(a, a_len-1, b, b_len-1) +cost;
+  if(i < d) d = i;
+  if(s < d) d = s;
+  return d;
 }
 
 #ifdef SIM

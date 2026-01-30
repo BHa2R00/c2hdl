@@ -11,7 +11,7 @@ module levenshtein_tb;
     reg setb = 0;
     wire idle;
 
-    reg [8:0] pc0;
+    reg [7:0] pc0;
 
     wire [31:0] addr;
     wire [2:0] size;
@@ -121,14 +121,14 @@ initial begin
   a10 = 4; // a_len
   a20 = 'h1200; // b_p
   a30 = 5; // b_len
-  pc0 = 'h38; ra0 = 'h124+4; // call levenshtein 
+  pc0 = 'h0; ra0 = 'he4+4; // call levenshtein 
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); d = dut.a0; @(posedge clk); // ret levenshtein
   $write("d(%s,%s) = %d\n", a, b, d);
   repeat(3) @(posedge clk); setb = 0;
   a20 = 'h1300; // b_p
   a30 = 5; // b_len
-  pc0 = 'h38; ra0 = 'h124+4; // call levenshtein 
+  pc0 = 'h0; ra0 = 'he4+4; // call levenshtein 
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); d = dut.a0; @(posedge clk); // ret levenshtein
   $write("d(%s,%s) = %d\n", a, c, d);
