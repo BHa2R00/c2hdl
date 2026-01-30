@@ -7,4 +7,4 @@ SECTIONS
   .data : { *(.data) } 
 }
 PROVIDE(stdout = 0x3001);
-PROVIDE(stdin  = 0x3002);
+PROVIDE(stdin  = 0x3004);

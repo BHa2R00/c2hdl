@@ -76,7 +76,7 @@ GCOBJ=$OUTPUT_NAME
 DUMP="${GCOBJ}.s"
 echo "Processing list: ${C_FILES[*]} -> $GCOBJ"
 $CC \
-  -I ./ \
+  -I ./include \
   -march=${ARCH} \
   -mabi=${MABI} \
   -g -Os \
