@@ -44,8 +44,6 @@ module quicksort_tb;
         .ready (ready)
     );
 
-    wire [31:0] addr1 = addr >> 2;
-
 always @(posedge clk or negedge rstb) begin
     if(!rstb) begin
       ready <= 0;
