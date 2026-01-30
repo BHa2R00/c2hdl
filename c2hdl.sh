@@ -76,6 +76,7 @@ GCOBJ=$OUTPUT_NAME
 DUMP="${GCOBJ}.s"
 echo "Processing list: ${C_FILES[*]} -> $GCOBJ"
 $CC \
+  -I ./ \
   -march=${ARCH} \
   -mabi=${MABI} \
   -g -Os \
@@ -84,6 +85,8 @@ $CC \
   -fno-common \
   -nostdlib \
   -static \
+  -ffunction-sections \
+  -fdata-sections \
   -fno-stack-protector \
   -fno-common \
   -fno-omit-frame-pointer \

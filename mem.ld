@@ -1,16 +1,10 @@
 SECTIONS
 {
   . = 0x000;
-  .text : ALIGN(4) {
-    *(.text)
-    *(.text.*)
-  } 
+  .text : { *(.text) *(.text.*) } 
   . = 0x1000;
-  .rodata : ALIGN(4) {
-    *(.rodata)
-    *(.rodata.*)
-  } 
-  .data : ALIGN(4) {
-    *(.data)
-  } 
+  .rodata : {  *(.rodata) *(.rodata.*) } 
+  .data : { *(.data) } 
 }
+PROVIDE(stdout = 0x3001);
+PROVIDE(stdin  = 0x3002);
