@@ -1,7 +1,7 @@
 #ifdef SIM
 #include <stdio.h>
 #else
-#include "sw.h"
+#include "stdio.h"
 #endif
 
 #ifdef SIM

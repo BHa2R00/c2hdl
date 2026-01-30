@@ -1,7 +1,10 @@
 #ifdef SIM
 #include <stdio.h>
-#endif
 #include <string.h>
+#else 
+#include "stdio.h"
+#include "string.h"
+#endif
 
 int levenshtein(char* a, int a_len, char* b, int b_len)
 {

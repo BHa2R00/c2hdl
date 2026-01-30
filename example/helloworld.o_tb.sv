@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-`include "../hw.sv"
+`include "../rtl/stdio.sv"
 `include "helloworld.o.v"
 
 
@@ -13,7 +13,7 @@ module helloworld_tb;
     reg setb = 0;
     wire idle;
 
-    reg [7:0] pc0;
+    reg [8:0] pc0;
 
     wire [31:0] addr;
     wire [2:0] size;
@@ -62,6 +62,21 @@ stdout_data,
 rstb, clk
 );
 
+
+  wire stdin_ready;
+  wire stdin_valid = (addr=='h3004) && valid && ~write;
+  wire stdin_rx;
+  wire [7:0] stdin_data;
+tty_rx
+u_stdin (
+stdin_ready,
+stdin_valid,
+stdin_data,
+stdin_rx,
+rstb, clk
+);
+
+
 reg ram_ready;
 reg [31:0] ram_rdata;
 always @(posedge clk or negedge rstb) begin
@@ -71,12 +86,11 @@ always @(posedge clk or negedge rstb) begin
       ram_ready <= valid;
       if (valid) begin
         if (write) begin
-            ram[addr] <= wdata[7:0];
-            if(size >= 1) ram[addr+1] <= wdata[15:8];
-            if(size == 2) begin
-                ram[addr+2] <= wdata[23:16];
-                ram[addr+3] <= wdata[31:24];
-            end
+            case(size)
+              0 : ram[addr] <= wdata>>(8*addr[1:0]);
+              1 : {ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
+              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
+            endcase
         end
         else begin
           ram_rdata <= {
@@ -92,9 +106,11 @@ end
 
 assign ready = 
   (addr=='h3000) ? stdout_ready :
+  (addr=='h3004) ? stdin_ready :
   ram_ready;
 assign rdata =
   (addr=='h3000) ? 0 : 
+  (addr=='h3004) ? stdin_data : 
   ram_rdata;
 
 wire [703:0] a = {
@@ -105,7 +121,40 @@ wire [703:0] a = {
   ram['h1100+16],ram['h1100+17],ram['h1100+18],ram['h1100+19],
   ram['h1100+20],ram['h1100+21]
   };
-reg signed [31:0] d;
+
+wire tx_empty;
+reg tx_push;
+reg [7:0] tx_data;
+reg [8191:0] tx_mem;
+reg signed [15:0] tx_k;
+tty_tx
+u_tx (
+  tx_empty, 
+  tx_push, 
+  stdin_rx, 
+  tx_data, 
+  rstb, clk
+);
+
+task puts;
+  while(tx_k>0) begin
+    tx_data = tx_mem>>(8*(tx_k-1));
+    tx_push = 0;
+    @(posedge clk);
+    tx_push = 1;
+    @(posedge tx_empty);
+    @(posedge clk);
+    tx_push = 0;
+    tx_k=tx_k-1;
+  end
+    tx_data = 'h0d;
+    tx_push = 0;
+    @(posedge clk);
+    tx_push = 1;
+    @(posedge tx_empty);
+    @(posedge clk);
+    tx_push = 0;
+endtask
 
 initial begin
   `ifdef FST
@@ -122,7 +171,7 @@ initial begin
   a00 = 'h1100; // &ptr
   a10 = 1; // size
   a20 = 22; // nmemb 
-  a30 = 'h3000; // &stream -> stdio
+  a30 = 'h3000; // &stream -> stdout
   sp0 = 'h2000;
   {
   ram['h1100+00],ram['h1100+01],ram['h1100+02],ram['h1100+03],
@@ -132,9 +181,16 @@ initial begin
   ram['h1100+16],ram['h1100+17],ram['h1100+18],ram['h1100+19],
   ram['h1100+20],ram['h1100+21]
   } = "shit! urmom is so fat\n";
-  pc0 = 'h80; ra0 = 'he8+4; // call helloworld 
+  pc0 = 'h80; ra0 = 'he8+4; // call fwrite
   repeat(3) @(posedge clk); setb = 1;
-  wait(idle == 1); d = dut.a0; @(posedge clk); // ret helloworld
+  wait(idle == 1); @(posedge clk); // ret fwrite
+  repeat(3) @(posedge clk); setb = 0;
+  a20 = 15; // nmemb 
+  a30 = 'h3004; // &stream -> stdin
+  pc0 = 'hec; ra0 = 'h150+4; // call fread
+  repeat(3) @(posedge clk); setb = 1;
+  tx_mem = "AYO! what's up\n"; tx_k=15; puts;
+  wait(idle == 1); @(posedge clk); // ret fread
   repeat(3) @(posedge clk); setb = 0;
   $finish;
 end

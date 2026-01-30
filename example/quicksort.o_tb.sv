@@ -51,14 +51,15 @@ always @(posedge clk or negedge rstb) begin
       ready <= valid;
         if (valid) begin
             if (write) begin
-                ram[addr] <= wdata[7:0];
-                if(size >= 1) ram[addr+1] <= wdata[15:8];
-                if(size == 2) begin
-                    ram[addr+2] <= wdata[23:16];
-                    ram[addr+3] <= wdata[31:24];
-                end
+                case(size)
+                  0 : ram[addr] <= wdata>>(8*addr[1:0]);
+                  1 : {ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
+                  2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
+                endcase
             end
-            rdata <= {ram[{addr[31:2],2'd3}], ram[{addr[31:2],2'd2}], ram[{addr[31:2],2'd1}], ram[{addr[31:2],2'd0}]};
+            else begin
+              rdata <= {ram[{addr[31:2],2'd3}], ram[{addr[31:2],2'd2}], ram[{addr[31:2],2'd1}], ram[{addr[31:2],2'd0}]};
+            end
         end
     end
 end

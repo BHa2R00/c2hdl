@@ -104,3 +104,43 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, void *stream) {
     for (size_t i = 0; i < total; i++) {
   e4:	00178793          	addi	a5,a5,1
   e8:	fd5ff06f          	j	 0xbc <fwrite+0x3c>
+
+ 0x000000ec <fread>:
+
+size_t fread(void *ptr, size_t size, size_t nmemb, void *stream) {
+  ec:	fec10113          	addi	sp,sp,-20
+  f0:	00112823          	sw	ra,16(sp)
+  f4:	00812623          	sw	s0,12(sp)
+  f8:	00912423          	sw	s1,8(sp)
+  fc:	01410413          	addi	s0,sp,20
+ 100:	00050493          	mv	s1,a0
+ 104:	00058513          	mv	a0,a1
+ 108:	fec42823          	sw	a2,-16(s0)
+ 10c:	fed42623          	sw	a3,-20(s0)
+    char *data = (char *)ptr;
+    volatile char *port = (volatile char *)stream;
+    size_t total = size * nmemb;
+ 110:	00060593          	mv	a1,a2
+ 114:	00000097          	auipc	ra,0x0
+ 118:	eec080e7          	jalr	-276(ra) #  0x0 <__mulsi3>
+    for (size_t i = 0; i < total; i++) {
+ 11c:	00000793          	li	a5,0
+ 120:	fec42683          	lw	a3,-20(s0)
+ 124:	00a79e63          	bne	a5,a0, 0x140 <fread+0x54>
+        data[i] = *port; 
+    }
+    return nmemb;
+}
+ 128:	ff042503          	lw	a0,-16(s0)
+ 12c:	01012083          	lw	ra,16(sp)
+ 130:	00c12403          	lw	s0,12(sp)
+ 134:	00812483          	lw	s1,8(sp)
+ 138:	01410113          	addi	sp,sp,20
+ 13c:	00008067          	ret
+        data[i] = *port; 
+ 140:	0006c583          	lbu	a1,0(a3)
+ 144:	00f48633          	add	a2,s1,a5
+ 148:	00b60023          	sb	a1,0(a2)
+    for (size_t i = 0; i < total; i++) {
+ 14c:	00178793          	addi	a5,a5,1
+ 150:	fd5ff06f          	j	 0x124 <fread+0x38>

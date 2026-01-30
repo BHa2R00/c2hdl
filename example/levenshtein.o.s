@@ -5,9 +5,9 @@ example/levenshtein.o:     file format elf32-littleriscv
 Disassembly of section .text:
 
  0x00000000 <levenshtein>:
-#inclu 0xde <stdio.h>
+#include "stdio.h"
+#include "string.h"
 #endif
-#inclu 0xde <string.h>
 
 int levenshtein(char* a, int a_len, char* b, int b_len)
 {
