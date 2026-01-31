@@ -4,11 +4,11 @@
 #include "stdio.h"
 #endif
 
-#ifdef SIM
 int main()
 {
-  char a[] = "shit! urmom is so fat\n";
+  char a[50] = "helloworld! echo 50 chars\n> ";
+  fwrite(a, 1, sizeof(a), stdout);
+  fread(a, 1, 50, stdin);
   fwrite(a, 1, sizeof(a), stdout);
   return 0;
 }
-#endif

@@ -13,7 +13,7 @@ module helloworld_tb;
     reg setb = 0;
     wire idle;
 
-    reg [8:0] pc0;
+    reg [9:0] pc0;
 
     wire [31:0] addr;
     wire [2:0] size;
@@ -23,7 +23,10 @@ module helloworld_tb;
     wire [31:0] rdata;
     wire        ready;
 
+(* ram_style="block" *)
+//(* ramstyle = "M9K" *)
     reg [ 7:0] ram ['h1000:'h2000];
+
     reg [31:0] s10, a20, a10, a40, a50, a30, a00, s00, ra0, sp0;
     helloworld dut (
         .clk   (clk),
@@ -82,14 +85,15 @@ reg [31:0] ram_rdata;
 always @(posedge clk or negedge rstb) begin
     if(!rstb) begin
       ram_ready <= 0;
+      $readmemh("helloworld.o.memh",ram);
     end else begin
       ram_ready <= valid;
       if (valid) begin
         if (write) begin
             case(size)
-              0 : ram[addr] <= wdata>>(8*addr[1:0]);
-              1 : {ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
-              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
+              0 : ram[addr] = wdata>>(8*addr[1:0]);
+              1 : {ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
+              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
             endcase
         end
         else begin
@@ -114,12 +118,12 @@ assign rdata =
   ram_rdata;
 
 wire [703:0] a = {
-  ram['h1100+00],ram['h1100+01],ram['h1100+02],ram['h1100+03],
-  ram['h1100+04],ram['h1100+05],ram['h1100+06],ram['h1100+07],
-  ram['h1100+08],ram['h1100+09],ram['h1100+10],ram['h1100+11],
-  ram['h1100+12],ram['h1100+13],ram['h1100+14],ram['h1100+15],
-  ram['h1100+16],ram['h1100+17],ram['h1100+18],ram['h1100+19],
-  ram['h1100+20],ram['h1100+21]
+  ram['h1000+00],ram['h1000+01],ram['h1000+02],ram['h1000+03],
+  ram['h1000+04],ram['h1000+05],ram['h1000+06],ram['h1000+07],
+  ram['h1000+08],ram['h1000+09],ram['h1000+10],ram['h1000+11],
+  ram['h1000+12],ram['h1000+13],ram['h1000+14],ram['h1000+15],
+  ram['h1000+16],ram['h1000+17],ram['h1000+18],ram['h1000+19],
+  ram['h1000+20],ram['h1000+21]
   };
 
 wire tx_empty;
@@ -168,26 +172,26 @@ initial begin
   rstb = 0;
   setb = 0;
   #20 rstb = 1;
-  a00 = 'h1100; // &ptr
+  a00 = 'h1000; // &ptr
   a10 = 1; // size
   a20 = 22; // nmemb 
   a30 = 'h3000; // &stream -> stdout
   sp0 = 'h2000;
   {
-  ram['h1100+00],ram['h1100+01],ram['h1100+02],ram['h1100+03],
-  ram['h1100+04],ram['h1100+05],ram['h1100+06],ram['h1100+07],
-  ram['h1100+08],ram['h1100+09],ram['h1100+10],ram['h1100+11],
-  ram['h1100+12],ram['h1100+13],ram['h1100+14],ram['h1100+15],
-  ram['h1100+16],ram['h1100+17],ram['h1100+18],ram['h1100+19],
-  ram['h1100+20],ram['h1100+21]
+  ram['h1000+00],ram['h1000+01],ram['h1000+02],ram['h1000+03],
+  ram['h1000+04],ram['h1000+05],ram['h1000+06],ram['h1000+07],
+  ram['h1000+08],ram['h1000+09],ram['h1000+10],ram['h1000+11],
+  ram['h1000+12],ram['h1000+13],ram['h1000+14],ram['h1000+15],
+  ram['h1000+16],ram['h1000+17],ram['h1000+18],ram['h1000+19],
+  ram['h1000+20],ram['h1000+21]
   } = "shit! urmom is so fat\n";
-  pc0 = 'h80; ra0 = 'he8+4; // call fwrite
+  pc0 = 'hf8; ra0 = 'h160+4; // call fwrite
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); @(posedge clk); // ret fwrite
   repeat(3) @(posedge clk); setb = 0;
   a20 = 15; // nmemb 
   a30 = 'h3004; // &stream -> stdin
-  pc0 = 'hec; ra0 = 'h150+4; // call fread
+  pc0 = 'h164; ra0 = 'h1c8+4; // call fread
   repeat(3) @(posedge clk); setb = 1;
   tx_mem = "AYO! what's up\n"; tx_k=15; puts;
   wait(idle == 1); @(posedge clk); // ret fread
