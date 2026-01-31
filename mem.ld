@@ -6,5 +6,5 @@ SECTIONS
   .rodata : {  *(.rodata) *(.rodata.*) } 
   .data : { *(.data) } 
 }
-PROVIDE(stdout = 0x3001);
-PROVIDE(stdin  = 0x3004);
+PROVIDE(stdout = 0x3000);
+PROVIDE(stdin = 0x3004);

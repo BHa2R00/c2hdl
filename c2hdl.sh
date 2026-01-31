@@ -3,6 +3,7 @@ ARCH=rv32e
 MABI=ilp32e
 CC=riscv32-linux-gnu-gcc
 OBJDUMP=riscv32-linux-gnu-objdump
+OBJCOPY=riscv32-linux-gnu-objcopy
 C_FILES=()
 LD_ARGS=()
 U_NAMES=()
@@ -105,6 +106,8 @@ $OBJDUMP -S "$GCOBJ" \
   | sed -E 's/([0-9a-f]+) </ 0x\1 </g' \
   | sed -E 's/jal\s+(0x[0-9a-f]+)/jal\tra,\1/g' \
   | tee "$DUMP"
+$OBJCOPY -O binary "$GCOBJ" "${GCOBJ}.bin"
+hexdump -v -e '1/1 "%02x\n"' "${GCOBJ}.bin" > "${GCOBJ}.memh"
 for name in "${U_NAMES[@]}"; do
     echo "Generating Verilog for entry: $name"
     sbcl --script asm2hdl.lisp -g -s "$DUMP" -t "$ARCH" -o "${GCOBJ}.v" -top "$BASE"
