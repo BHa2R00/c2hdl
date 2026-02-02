@@ -19,6 +19,8 @@ Example:
 </pre>
 
 ## example
+### binarysearch
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260202105525_630x459_scrot.png)
 ### helloworld
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260131022836_988x188_scrot.png)
 ### levenshtein
