@@ -107,7 +107,17 @@ $OBJDUMP -S "$GCOBJ" \
   | sed -E 's/jal\s+(0x[0-9a-f]+)/jal\tra,\1/g' \
   | tee "$DUMP"
 $OBJCOPY -O binary "$GCOBJ" "${GCOBJ}.bin"
-hexdump -v -e '1/1 "%02x\n"' "${GCOBJ}.bin" > "${GCOBJ}.memh"
+hexdump -s 4096 -v -e '1/1 "%02x\n"' "${GCOBJ}.bin" > "${GCOBJ}.memh"
+hexdump -s 4096 -v -e '/4 "%08x\n"' "${GCOBJ}.bin" > "${GCOBJ}_32.memh"
+awk 'BEGIN { 
+    print "WIDTH=32;"; 
+    print "DEPTH=1024;"; 
+    print "ADDRESS_RADIX=HEX;"; 
+    print "DATA_RADIX=HEX;"; 
+    print "CONTENT BEGIN"; 
+} 
+{ printf "%X : %s;\n", NR-1, $0 } 
+END { print "END;"; }' "${GCOBJ}_32.memh" > "${GCOBJ}.mif"
 for name in "${U_NAMES[@]}"; do
     echo "Generating Verilog for entry: $name"
     sbcl --script asm2hdl.lisp -g -s "$DUMP" -t "$ARCH" -o "${GCOBJ}.v" -top "$BASE"
