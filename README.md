@@ -22,11 +22,7 @@ Example:
 ### binarysearch
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260202105525_630x459_scrot.png)
 ### helloworld
-
-<video src="https://github.com/BHa2R00/c2hdl/raw/main/example/20260203212915.mp4" controls="controls" style="max-width: 100%;">
-  Your browser does not support the video tag.
-</video>
-
+![format](https://github.com/BHa2R00/c2hdl/raw/main/example/20260203212915.gif)
 ### levenshtein
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260130132557_998x453_scrot.png)
 ### insertsort
