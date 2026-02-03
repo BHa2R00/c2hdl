@@ -36,7 +36,7 @@ always@(negedge rstb or posedge clk) begin
       else cnt <= cnt - 1;
       tx <= buffer[0];
     end
-    else if(valid) begin
+    else if(valid && !ready) begin
       cst <= 11;
       buffer <= {data,2'b01};
       cnt <= 0;
@@ -51,7 +51,7 @@ module tty_rx
 (
   output reg ready, 
   input valid, 
-  output [7:0] data, 
+  output reg [7:0] data, 
   input rx, 
   input rstb, clk 
 );
@@ -81,6 +81,7 @@ always@(negedge rstb or posedge clk) begin
       if(valid && (buffer[8]==1)) begin
         cst <= 0;
         ready <= 1;
+        data <= buffer[7:0];
       end
     end
     else begin
@@ -95,5 +96,4 @@ always@(negedge rstb or posedge clk) begin
     end
   end
 end
-assign data = buffer[7:0];
 endmodule
