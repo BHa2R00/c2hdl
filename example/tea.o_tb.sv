@@ -1,14 +1,17 @@
 `timescale 1ns/1ps
+
+`include "../rtl/ram.sv"
+`include "../rtl/stdio.sv"
 `include "tea.o.v"
 
 
 module tea_tb;
 
-    reg clk = 0;
+    reg clk;
     always #5 clk = ~clk;
 
-    reg rstb = 0;
-    reg setb = 0;
+    reg rstb;
+    reg setb;
     wire idle;
 
     reg [9:0] pc0;
@@ -22,7 +25,6 @@ module tea_tb;
     reg  [31:0] rdata;
     reg         ready;
 
-    reg [ 7:0] ram ['h1000:'h2000];
     reg [31:0] ra0, a30, a40, a50, a00, a10, a20;
     tea dut (
         .clk   (clk),
@@ -44,41 +46,38 @@ module tea_tb;
         .ready (ready)
     );
 
-    integer i;
-    wire [31:0] addr1 = addr >> 2;
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "tea.o_32.memh"
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ready <= 0;
-    end else begin
-      ready <= valid;
-        if (valid) begin
-            if (write) begin
-                ram[addr] <= wdata[7:0];
-                if(size >= 1) ram[addr+1] <= wdata[15:8];
-                if(size == 2) begin
-                    ram[addr+2] <= wdata[23:16];
-                    ram[addr+3] <= wdata[31:24];
-                end
-            end
-            rdata <= {ram[{addr[31:2],2'd3}], ram[{addr[31:2],2'd2}], ram[{addr[31:2],2'd1}], ram[{addr[31:2],2'd0}]};
-        end
-    end
-end
+assign ready = 
+  ram_ready;
+assign rdata =
+  ram_rdata;
 
-wire [31:0] round = {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]};
-wire [31:0] dat_p = {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]};
-wire [31:0] key_p = {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]};
-wire [31:0] dat = {
-  ram['h1100+00],ram['h1100+01],
-  ram['h1100+02],ram['h1100+03]
-  };
-wire [63:0] key = {
-  ram['h1200+01],ram['h1200+00],
-  ram['h1200+03],ram['h1200+02],
-  ram['h1200+05],ram['h1200+04],
-  ram['h1200+07],ram['h1200+06]
-  };
+wire [31:0] round = u_ram.mem[0>>2];
+wire [31:0] dat_p = u_ram.mem[4>>2];
+wire [31:0] key_p = u_ram.mem[8>>2];
+wire [31:0] dat = u_ram.mem['h10>>2];
+wire [63:0] key = {u_ram.mem['h24>>2],u_ram.mem['h20>>2]};
 
 initial begin
   `ifdef FST
@@ -89,24 +88,18 @@ initial begin
   $fsdbDumpfile("tea_tb.fsdb");
   $fsdbDumpvars(0,tea_tb);
   `endif
+  clk = 0;
   rstb = 0;
   setb = 0;
   #20 rstb = 1;
   a00 = 'h1000;
-  sp0 = 'h2000;
-  {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]} = 10;
-  {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]} = 'h1100+00;
-  {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]} = 'h1200+00;
-  {
-  ram['h1100+00],ram['h1100+01],
-  ram['h1100+02],ram['h1100+03]
-  } = "shit";
-  {
-  ram['h1200+01],ram['h1200+00],
-  ram['h1200+03],ram['h1200+02],
-  ram['h1200+05],ram['h1200+04],
-  ram['h1200+07],ram['h1200+06]
-  } = {16'h1234,16'h5678,16'h9ABC,16'hDEF1};
+  sp0 = 'h1100;
+  u_ram.mem[0>>2] = 10;
+  u_ram.mem[4>>2] = 'h1010;
+  u_ram.mem[8>>2] = 'h1020;
+  {u_ram.mem[a00+11],u_ram.mem[a00+10],u_ram.mem[a00+ 9],u_ram.mem[a00+ 8]} = 'h1200+00;
+  u_ram.mem['h10>>2] = "shit";
+  {u_ram.mem['h24>>2],u_ram.mem['h20>>2]} = {16'h1234,16'h5678,16'h9ABC,16'hDEF1};
   $write("plain = %s\n", dat);
   pc0 = 'h80; ra0 = 'h160+4;
   repeat(3) @(posedge clk); setb = 1;
