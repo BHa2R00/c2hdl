@@ -32,4 +32,4 @@ Example:
 ### tea
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214804_1007x270_scrot.png)
 ### fibonacci
-![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214832_982x165_scrot.png)
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260204181818_980x171_scrot.png)
