@@ -11,9 +11,9 @@ output reg [31:0] wdata;
 input [31:0] rdata;
 input ready;
 input [31:0] s10, a20, a30, a50, a40, a00, s00, ra0, sp0;
-wire [31:0] rdata_w = rdata >> (8*addr[1:0]);
-wire [15:0] rdata_h = rdata >> (8*addr[1:0]);
-wire [ 7:0] rdata_b = rdata >> (8*addr[1:0]);
+wire [31:0] rdata_w = rdata;
+wire [15:0] rdata_h = rdata;
+wire [ 7:0] rdata_b = rdata;
 reg [31:0] zero, s1, a2, a3, a5, a4, a0, s0, ra, sp;
 always@(negedge rstb or posedge clk) begin
   if(!rstb) begin
