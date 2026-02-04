@@ -21,9 +21,9 @@ always@(negedge rstb or posedge clk) begin
     ready <= 0;
     if(|cst) begin
       if(~|cnt) begin
-        //cnt <= 50; // 50MHz clk / 1MHz baud 
+        cnt <= 50; // 50MHz clk / 1MHz baud 
         //cnt <= 200; // 200MHz clk / 1MHz baud 
-        cnt <= 400; // 200MHz clk / 500KHz baud 
+        //cnt <= 400; // 200MHz clk / 500KHz baud 
         cst <= cst - 1;
         buffer <= {1'b1,buffer[9:1]};
         if(cst == 1) begin
@@ -71,9 +71,9 @@ always@(negedge rstb or posedge clk) begin
     rx_d <= {rx_d[0],rx};
     if(cst==0) begin
       if(rx_d==2'b10) begin
-        //cnt <= 75; // 50MHz clk / 1MHz baud * 1.5 
+        cnt <= 75; // 50MHz clk / 1MHz baud * 1.5 
         //cnt <= 300; // 200MHz clk / 1MHz baud * 1.5 
-        cnt <= 600; // 200MHz clk / 500KHz baud * 1.5 
+        //cnt <= 600; // 200MHz clk / 500KHz baud * 1.5 
         cst <= 10;
       end
     end
@@ -86,9 +86,9 @@ always@(negedge rstb or posedge clk) begin
     end
     else begin
       if(~|cnt) begin
-        //cnt <= 50; // 50MHz clk / 1MHz baud 
+        cnt <= 50; // 50MHz clk / 1MHz baud 
         //cnt <= 200; // 200MHz clk / 1MHz baud 
-        cnt <= 400; // 200MHz clk / 500KHz baud 
+        //cnt <= 400; // 200MHz clk / 500KHz baud 
         cst <= cst - 1;
         buffer <= {rx_d[1],buffer[8:1]};
       end
