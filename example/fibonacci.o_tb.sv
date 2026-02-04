@@ -1,4 +1,7 @@
 `timescale 1ns/1ps
+
+`include "../rtl/ram.sv"
+`include "../rtl/stdio.sv"
 `include "fibonacci.o.v"
 
 
@@ -19,10 +22,9 @@ module fibonacci_tb;
     wire        valid;
     wire        write;
     wire [31:0] wdata;
-    reg  [31:0] rdata;
-    reg         ready;
+    wire [31:0] rdata;
+    wire        ready;
 
-    reg [ 7:0] ram ['h1000:'h2000];
     reg [31:0] ra0, a30, a40, a50, a00, a10, a20;
     fibonacci dut (
         .clk   (clk),
@@ -44,32 +46,37 @@ module fibonacci_tb;
         .ready (ready)
     );
 
-    integer i;
-    wire [31:0] addr1 = addr >> 2;
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "fibonacci.o_32.memh"
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ready <= 0;
-    end else begin
-      ready <= valid;
-        if (valid) begin
-            if (write) begin
-                ram[addr] <= wdata[7:0];
-                if(size >= 1) ram[addr+1] <= wdata[15:8];
-                if(size == 2) begin
-                    ram[addr+2] <= wdata[23:16];
-                    ram[addr+3] <= wdata[31:24];
-                end
-            end
-            rdata <= {ram[addr+3], ram[addr+2], ram[addr+1], ram[addr]};
-        end
-    end
-end
+assign ready = 
+  ram_ready;
+assign rdata =
+  ram_rdata;
 
-wire [31:0] a = {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]};
-wire [31:0] b = {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]};
-wire [31:0] c = {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]};
-wire [31:0] k = {ram[a00+15],ram[a00+14],ram[a00+13],ram[a00+12]};
+wire [31:0] a = u_ram.mem[ 0>>2];
+wire [31:0] b = u_ram.mem[ 4>>2];
+wire [31:0] c = u_ram.mem[ 8>>2];
+wire [31:0] k = u_ram.mem[12>>2];
 
 initial begin
   `ifdef FST
@@ -84,12 +91,12 @@ initial begin
   setb = 0;
   #20 rstb = 1;
   a00 = 'h1000;
-  sp0 = 'h2000;
+  sp0 = 'h1100;
   pc0 = 'h40;ra0 = 'h88+4;
-  {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]} = 1;
-  {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]} = 1;
-  {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]} = 0;
-  {ram[a00+15],ram[a00+14],ram[a00+13],ram[a00+12]} = 16;
+  u_ram.mem[ 0>>2] = 1;
+  u_ram.mem[ 4>>2] = 1;
+  u_ram.mem[ 8>>2] = 0;
+  u_ram.mem[12>>2] = 16;
   repeat(3) @(posedge clk); setb = 0;
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); 
