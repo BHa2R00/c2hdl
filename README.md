@@ -28,7 +28,7 @@ Example:
 ### insertsort
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128234450_973x197_scrot.png)
 ### quicksort
-![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260128214318_975x276_scrot.png)
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260205011808_980x275_scrot.png)
 ### tea
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260204204710_982x144_scrot.png)
 ### fibonacci
