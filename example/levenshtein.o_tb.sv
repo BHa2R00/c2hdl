@@ -1,4 +1,7 @@
 `timescale 1ns/1ps
+
+`include "../rtl/ram.sv"
+`include "../rtl/stdio.sv"
 `include "levenshtein.o.v"
 
 
@@ -21,7 +24,6 @@ module levenshtein_tb;
     reg  [31:0] rdata;
     reg         ready;
 
-    reg [ 7:0] ram ['h1000:'h2000];
     reg  [31:0] t10, t00, a40, a30, s10, a10, a20, a50, a00, s00, ra0, sp0;
     levenshtein dut (
         .clk   (clk),
@@ -46,48 +48,40 @@ module levenshtein_tb;
         .ready (ready)
     );
 
-    wire [31:0] addr1 = addr >> 2;
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "levenshtein.o_32.memh",
+  'h1000
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ready <= 0;
-    end else begin
-      ready <= valid;
-        if (valid) begin
-            if (write) begin
-                case(size)
-                  0 : ram[addr] <= wdata>>(8*addr[1:0]);
-                  1 : {ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
-                  2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} <= wdata>>(8*addr[1:0]);
-                endcase
-            end
-            else begin
-              rdata <= {
-                ram[{addr[31:2],2'd3}], 
-                ram[{addr[31:2],2'd2}], 
-                ram[{addr[31:2],2'd1}], 
-                ram[{addr[31:2],2'd0}]
-                };
-            end
-        end
-    end
-end
+assign ready = 
+  ram_ready;
+assign rdata =
+  ram_rdata;
 
-wire [31:0] a = {
-  ram['h1100+00],ram['h1100+01],
-  ram['h1100+02],ram['h1100+03]
-  };
-wire [39:0] b = {
-  ram['h1200+00],ram['h1200+01],
-  ram['h1200+02],ram['h1200+03],
-  ram['h1200+04]
-  };
-wire [39:0] c = {
-  ram['h1300+00],ram['h1300+01],
-  ram['h1300+02],ram['h1300+03],
-  ram['h1300+04]
-  };
-reg signed [31:0] d;
+`define a u_ram.mem['h100>>2]
+`define b {u_ram.mem['h204>>2],u_ram.mem['h200>>2]}
+`define c {u_ram.mem['h304>>2],u_ram.mem['h300>>2]}
+wire [31:0] a = `a;
+wire [63:0] b = `b;
+wire [63:0] c = `c;
 
 initial begin
   `ifdef FST
@@ -102,35 +96,26 @@ initial begin
   setb = 0;
   #20 rstb = 1;
   sp0 = 'h2000;
-  {
-  ram['h1100+00],ram['h1100+01],
-  ram['h1100+02],ram['h1100+03]
-  } = "shit";
-  {
-  ram['h1200+00],ram['h1200+01],
-  ram['h1200+02],ram['h1200+03],
-  ram['h1200+04]
-  } = "urmom";
-  {
-  ram['h1300+00],ram['h1300+01],
-  ram['h1300+02],ram['h1300+03],
-  ram['h1300+04]
-  } = "Shit!";
+  `a = "shit";
+  `b = "urmom";
+  `c = "Shit!";
   a00 = 'h1100; // a_p
   a10 = 4; // a_len
   a20 = 'h1200; // b_p
   a30 = 5; // b_len
   pc0 = 'h0; ra0 = 'he4+4; // call levenshtein 
   repeat(3) @(posedge clk); setb = 1;
-  wait(idle == 1); d = dut.a0; @(posedge clk); // ret levenshtein
-  $write("d(%s,%s) = %d\n", a, b, d);
+  wait(idle == 1);
+  $write("d(%s,%s) = %d\n", a, b, dut.a0);
+  @(posedge clk); // ret levenshtein
   repeat(3) @(posedge clk); setb = 0;
   a20 = 'h1300; // b_p
   a30 = 5; // b_len
   pc0 = 'h0; ra0 = 'he4+4; // call levenshtein 
   repeat(3) @(posedge clk); setb = 1;
-  wait(idle == 1); d = dut.a0; @(posedge clk); // ret levenshtein
-  $write("d(%s,%s) = %d\n", a, c, d);
+  wait(idle == 1);
+  $write("d(%s,%s) = %d\n", a, c, dut.a0);
+  @(posedge clk); // ret levenshtein
   repeat(3) @(posedge clk); setb = 0;
   $finish;
 end
