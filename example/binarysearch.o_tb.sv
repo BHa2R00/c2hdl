@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 
+`include "../rtl/ram.sv"
 `include "../rtl/stdio.sv"
 `include "binarysearch.o.v"
 
@@ -22,10 +23,6 @@ module binarysearch_tb;
     wire [31:0] wdata;
     wire [31:0] rdata;
     wire        ready;
-
-(* ram_style="block" *)
-//(* ramstyle = "M9K" *)
-    reg [ 7:0] ram ['h1000:'h2000];
 
 reg [31:0] a20, a30, a50, a00, a10, a40, s00, ra0, sp0;
     binarysearch dut (
@@ -79,32 +76,28 @@ stdin_rx,
 rstb, clk
 );
 
-reg ram_ready;
-reg [31:0] ram_rdata;
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ram_ready <= 0;
-    end else begin
-      ram_ready <= valid;
-      if (valid) begin
-        if (write) begin
-            case(size)
-              0 : ram[addr] = wdata>>(8*addr[1:0]);
-              1 : {ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-            endcase
-        end
-        else begin
-          ram_rdata <= {
-            ram[{addr[31:2],2'd3}], 
-            ram[{addr[31:2],2'd2}], 
-            ram[{addr[31:2],2'd1}], 
-            ram[{addr[31:2],2'd0}]
-            };
-        end
-      end
-    end
-end
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "binarysearch.o_32.memh",
+  'h1000
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
 assign ready = 
   (addr=='h3000) ? stdout_ready :
@@ -127,25 +120,23 @@ initial begin
   `endif
   j=-5000;
   for(k=0;k<100;k=k+1) begin
-    {ram['h1000+(4*k)+3],ram['h1000+(4*k)+2],ram['h1000+(4*k)+1],ram['h1000+(4*k)+0]} = j;
+    u_ram.mem[k] = j;
     $write("%5d : %5d", k, j); if(k%8==7) $write("\n");
     j= j+$urandom_range(0,'hff);
   end
   j=(j-5000)/2;
-  rstb = 0;
-  setb = 0;
   #20 rstb = 1;
   a00 = 'h1000; // A[]
   a10 = 0; // size
   a20 = 100; // size
   a30 = j; // target 
-  sp0 = 'h2000;
+  sp0 = 'h1ffc;
   pc0 = 'h0; ra0 = 'h50+4; // call binarysearch
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); 
   k=dut.a0; 
   @(posedge clk); // ret binarysearch
-  $write("\nsearch(%5d) = %5d : %5d\n", j, k, {ram['h1000+(4*k)+3],ram['h1000+(4*k)+2],ram['h1000+(4*k)+1],ram['h1000+(4*k)+0]});
+  $write("\nsearch(%5d) = %5d : %5d\n", j, k, u_ram.mem[k]);
   repeat(3) @(posedge clk); setb = 0;
   $finish;
 end
