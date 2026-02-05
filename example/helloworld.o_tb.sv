@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 
+`include "../rtl/ram.sv"
 `include "../rtl/stdio.sv"
 `include "helloworld.o.v"
 
@@ -22,10 +23,6 @@ module helloworld_tb;
     wire [31:0] wdata;
     wire [31:0] rdata;
     wire        ready;
-
-(* ram_style="block" *)
-//(* ramstyle = "M9K" *)
-    reg [ 7:0] ram ['h1000:'h2000];
 
     reg [31:0] s10, a20, a10, a40, a50, a30, a00, s00, ra0, sp0;
     helloworld dut (
@@ -79,34 +76,28 @@ stdin_rx,
 rstb, clk
 );
 
-
-reg ram_ready;
-reg [31:0] ram_rdata;
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ram_ready <= 0;
-      $readmemh("helloworld.o.memh",ram);
-    end else begin
-      ram_ready <= valid;
-      if (valid) begin
-        if (write) begin
-            case(size)
-              0 : ram[addr] = wdata>>(8*addr[1:0]);
-              1 : {ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-            endcase
-        end
-        else begin
-          ram_rdata <= {
-            ram[{addr[31:2],2'd3}], 
-            ram[{addr[31:2],2'd2}], 
-            ram[{addr[31:2],2'd1}], 
-            ram[{addr[31:2],2'd0}]
-            };
-        end
-      end
-    end
-end
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "helloworld.o_32.memh",
+  'h100
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
 assign ready = 
   (addr=='h3000) ? stdout_ready :
@@ -117,13 +108,13 @@ assign rdata =
   (addr=='h3004) ? stdin_data : 
   ram_rdata;
 
-wire [703:0] a = {
-  ram['h1000+00],ram['h1000+01],ram['h1000+02],ram['h1000+03],
-  ram['h1000+04],ram['h1000+05],ram['h1000+06],ram['h1000+07],
-  ram['h1000+08],ram['h1000+09],ram['h1000+10],ram['h1000+11],
-  ram['h1000+12],ram['h1000+13],ram['h1000+14],ram['h1000+15],
-  ram['h1000+16],ram['h1000+17],ram['h1000+18],ram['h1000+19],
-  ram['h1000+20],ram['h1000+21]
+wire [719:0] a = {
+  u_ram.mem[('h0000>>2)+00],
+  u_ram.mem[('h0000>>2)+04],
+  u_ram.mem[('h0000>>2)+08],
+  u_ram.mem[('h0000>>2)+12],
+  u_ram.mem[('h0000>>2)+16],
+  u_ram.mem[('h0000>>2)+20]
   };
 
 wire tx_empty;
@@ -174,24 +165,16 @@ initial begin
   #20 rstb = 1;
   a00 = 'h1000; // &ptr
   a10 = 1; // size
-  a20 = 22; // nmemb 
+  a20 = 31; // nmemb 
   a30 = 'h3000; // &stream -> stdout
-  sp0 = 'h2000;
-  {
-  ram['h1000+00],ram['h1000+01],ram['h1000+02],ram['h1000+03],
-  ram['h1000+04],ram['h1000+05],ram['h1000+06],ram['h1000+07],
-  ram['h1000+08],ram['h1000+09],ram['h1000+10],ram['h1000+11],
-  ram['h1000+12],ram['h1000+13],ram['h1000+14],ram['h1000+15],
-  ram['h1000+16],ram['h1000+17],ram['h1000+18],ram['h1000+19],
-  ram['h1000+20],ram['h1000+21]
-  } = "shit! urmom is so fat\n";
-  pc0 = 'hf8; ra0 = 'h160+4; // call fwrite
+  sp0 = 'h10fc;
+  pc0 = 'h80; ra0 = 'hE8+4; // call fwrite
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); @(posedge clk); // ret fwrite
   repeat(3) @(posedge clk); setb = 0;
   a20 = 15; // nmemb 
   a30 = 'h3004; // &stream -> stdin
-  pc0 = 'h164; ra0 = 'h1c8+4; // call fread
+  pc0 = 'hEC; ra0 = 'h150+4; // call fread
   repeat(3) @(posedge clk); setb = 1;
   tx_mem = "AYO! what's up\n"; tx_k=15; puts;
   wait(idle == 1); @(posedge clk); // ret fread
