@@ -1,4 +1,7 @@
 `timescale 1ns/1ps
+
+`include "../rtl/ram.sv"
+`include "../rtl/stdio.sv"
 `include "insertsort.o.v"
 
 
@@ -22,7 +25,6 @@ module insertsort_tb;
     reg  [31:0] rdata;
     reg         ready;
 
-    reg [ 7:0] ram ['h1000:'h2000];
     reg [31:0] ra0, a30, a40, a50, a00, a10, a20;
     insertsort dut (
         .clk   (clk),
@@ -44,36 +46,50 @@ module insertsort_tb;
         .ready (ready)
     );
 
-    wire [31:0] addr1 = addr >> 2;
+wire        ram_ready ;
+wire [31:0] ram_rdata ;
+wire [31:0] ram_wdata = wdata;
+wire        ram_write = write;
+wire [31:0] ram_addr  = addr -'h1000;
+wire [ 1:0] ram_size  = size[1:0];
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
+ram 
+#(
+  "insertsort.o_32.memh",
+  'h1000
+)
+u_ram (
+  ram_ready, 
+  ram_rdata, 
+  ram_wdata, 
+  ram_write, 
+  ram_addr , 
+  ram_size , 
+  ram_valid, 
+  rstb, clk
+);
 
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ready <= 0;
-    end else begin
-      ready <= valid;
-        if (valid) begin
-            if (write) begin
-                ram[addr] <= wdata[7:0];
-                if(size >= 1) ram[addr+1] <= wdata[15:8];
-                if(size == 2) begin
-                    ram[addr+2] <= wdata[23:16];
-                    ram[addr+3] <= wdata[31:24];
-                end
-            end
-            rdata <= {ram[{addr[31:2],2'd3}], ram[{addr[31:2],2'd2}], ram[{addr[31:2],2'd1}], ram[{addr[31:2],2'd0}]};
-        end
-    end
-end
+assign ready = 
+  ram_ready;
+assign rdata =
+  ram_rdata;
 
-wire [31:0] A_p    = {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]};
-wire [31:0] a      = {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]};
-wire [31:0] a_top  = {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]};
-wire [31:0] i      = {ram[a00+15],ram[a00+14],ram[a00+13],ram[a00+12]};
-wire [31:0] j      = {ram[a00+19],ram[a00+18],ram[a00+17],ram[a00+16]};
-wire [31:0] p      = {ram[a00+23],ram[a00+22],ram[a00+21],ram[a00+20]};
-wire [31:0] r      = {ram[a00+27],ram[a00+26],ram[a00+25],ram[a00+24]};
+`define A_p    u_ram.mem[ 0>>2]
+`define a      u_ram.mem[ 4>>2]
+`define a_top  u_ram.mem[ 8>>2]
+`define i      u_ram.mem[12>>2]
+`define j      u_ram.mem[16>>2]
+`define p      u_ram.mem[20>>2]
+`define r      u_ram.mem[24>>2]
+wire signed [31:0] A_p   = `A_p  ;
+wire signed [31:0] a     = `a    ;
+wire signed [31:0] a_top = `a_top;
+wire signed [31:0] i     = `i    ;
+wire signed [31:0] j     = `j    ;
+wire signed [31:0] p     = `p    ;
+wire signed [31:0] r     = `r    ;
 
-always@(posedge ($signed(r) == 0)) begin
+always@(posedge ($signed(`r) == 0)) begin
   $write("r hit\n");
 end
 
@@ -88,16 +104,14 @@ initial begin
   $fsdbDumpfile("insertsort_tb.fsdb");
   $fsdbDumpvars(0,insertsort_tb);
   `endif
-  rstb = 0;
-  setb = 0;
   #20 rstb = 1;
   a00 = 'h1000;
-  sp0 = 'h2000;
-  {ram[a00+ 3],ram[a00+ 2],ram[a00+ 1],ram[a00+ 0]} = 'h1200; // A_p
-  {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]} = 0; // a_top
+  sp0 = 'h1ffc;
+  `A_p = 'h1200;
+  `a_top = 0;
   $write("push\n");
   for(k=0;k<75;k=k+1) begin
-    {ram[a00+ 7],ram[a00+ 6],ram[a00+ 5],ram[a00+ 4]} = $signed($urandom_range(00,'hffffffff)); // a 
+    `a = $signed($urandom_range(00,'hffffffff));
     pc0 = 'h0; ra0 = 'h40+4; // call push_a 
     repeat(3) @(posedge clk); setb = 1;
     wait(idle == 1); 
@@ -108,7 +122,7 @@ initial begin
   repeat(3) @(posedge clk); setb = 1;
   wait(idle == 1); 
   repeat(3) @(posedge clk); setb = 0;
-  {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]} = {ram[a00+11],ram[a00+10],ram[a00+ 9],ram[a00+ 8]} -1;
+  `a_top = `a_top -1;
   $write("pop\n");
   for(k=0;k<75;k=k+1) begin
     pc0 = 'h44; ra0 = 'h84+4; // call pop_a 
