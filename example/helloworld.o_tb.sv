@@ -14,7 +14,7 @@ module helloworld_tb;
     reg setb = 0;
     wire idle;
 
-    reg [9:0] pc0;
+    reg [10:0] pc0;
 
     wire [31:0] addr;
     wire [2:0] size;
@@ -31,15 +31,8 @@ module helloworld_tb;
         .setb  (setb),
         .idle  (idle),
         .ra0(ra0),
-        .a50(a50),
-        .a40(a40),
-        .a30(a30),
-        .a20(a20),
-        .a10(a10),
-        .a00(a00),
         .pc0 (pc0),
         .sp0 (sp0),
-        .s00 (s00),
         .addr  (addr),
         .size  (size),
         .valid (valid),
@@ -52,8 +45,8 @@ module helloworld_tb;
   wire stdout_ready;
   wire stdout_valid = (addr=='h3000) && valid && write;
   wire stdout_tx;
-  wire [7:0] stdout_data = wdata[7:0];
-tty_tx
+  wire [7:0] stdout_data = wdata;
+tty_tx #(50) // 50MHz / 1MHz
 u_stdout (
 stdout_ready,
 stdout_valid,
@@ -67,7 +60,7 @@ rstb, clk
   wire stdin_valid = (addr=='h3004) && valid && ~write;
   wire stdin_rx;
   wire [7:0] stdin_data;
-tty_rx
+tty_rx #(50) // 50MHz / 1MHz
 u_stdin (
 stdin_ready,
 stdin_valid,
@@ -86,7 +79,7 @@ wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
 ram 
 #(
   "helloworld.o_32.memh",
-  'h100
+  'h1000
 )
 u_ram (
   ram_ready, 
@@ -108,21 +101,12 @@ assign rdata =
   (addr=='h3004) ? stdin_data : 
   ram_rdata;
 
-wire [719:0] a = {
-  u_ram.mem[('h0000>>2)+00],
-  u_ram.mem[('h0000>>2)+04],
-  u_ram.mem[('h0000>>2)+08],
-  u_ram.mem[('h0000>>2)+12],
-  u_ram.mem[('h0000>>2)+16],
-  u_ram.mem[('h0000>>2)+20]
-  };
-
 wire tx_empty;
 reg tx_push;
 reg [7:0] tx_data;
 reg [8191:0] tx_mem;
 reg signed [15:0] tx_k;
-tty_tx
+tty_tx #(50) // 50MHz / 1MHz
 u_tx (
   tx_empty, 
   tx_push, 
@@ -141,6 +125,7 @@ task puts;
     @(posedge clk);
     tx_push = 0;
     tx_k=tx_k-1;
+    repeat(100) @(posedge clk);
   end
     tx_data = 'h0d;
     tx_push = 0;
@@ -149,6 +134,7 @@ task puts;
     @(posedge tx_empty);
     @(posedge clk);
     tx_push = 0;
+    repeat(100) @(posedge clk);
 endtask
 
 initial begin
@@ -163,22 +149,14 @@ initial begin
   rstb = 0;
   setb = 0;
   #20 rstb = 1;
-  a00 = 'h1000; // &ptr
-  a10 = 1; // size
-  a20 = 31; // nmemb 
-  a30 = 'h3000; // &stream -> stdout
-  sp0 = 'h10fc;
-  pc0 = 'h80; ra0 = 'hE8+4; // call fwrite
+  sp0 = 'h1ffc;
+  pc0 = 'h340; ra0 = 4+'h454; // call main
   repeat(3) @(posedge clk); setb = 1;
-  wait(idle == 1); @(posedge clk); // ret fwrite
-  repeat(3) @(posedge clk); setb = 0;
-  a20 = 15; // nmemb 
-  a30 = 'h3004; // &stream -> stdin
-  pc0 = 'hEC; ra0 = 'h150+4; // call fread
-  repeat(3) @(posedge clk); setb = 1;
-  tx_mem = "AYO! what's up\n"; tx_k=15; puts;
-  wait(idle == 1); @(posedge clk); // ret fread
-  repeat(3) @(posedge clk); setb = 0;
+  wait(stdout_data=="i"); wait(stdout_data==10); wait(stdout_data==13);
+  wait(stdout_data==">"); wait(stdout_data==" ");
+  repeat(5) @(posedge clk);
+  tx_mem = "-500\n"; tx_k=5; puts;
+  wait(idle == 1); @(posedge clk); // ret main
   $finish;
 end
 

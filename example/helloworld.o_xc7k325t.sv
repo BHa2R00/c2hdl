@@ -4,7 +4,6 @@
 `include "../rtl/stdio.sv"
 `include "helloworld.o.v"
 
-
 module helloworld_xc7k325t 
 (
   output [1:0] debug, 
@@ -27,10 +26,9 @@ always@(negedge rstb or posedge clk) begin
     setb <=1;
   end
 end
-
-    wire [9:0] pc0='h194;
-    wire [31:0] ra0='h22C+4;
-    wire [31:0] sp0='h1100;
+wire [10:0] pc0 = 'h340;
+wire [31:0] ra0 = 4+'h454;
+wire [31:0] sp0 = 'h1ffc;
 
     wire [31:0] addr;
     wire [2:0] size;
@@ -40,22 +38,14 @@ end
     wire [31:0] rdata;
     wire        ready;
 
-    reg [31:0] s10, a20, a10, a40, a50, a30, a00, s00;
     helloworld dut (
         .clk   (clk),
         .rstb  (rstb),
         .setb  (setb),
         .idle  (idle),
         .ra0(ra0),
-        .a50(a50),
-        .a40(a40),
-        .a30(a30),
-        .a20(a20),
-        .a10(a10),
-        .a00(a00),
         .pc0 (pc0),
         .sp0 (sp0),
-        .s00 (s00),
         .addr  (addr),
         .size  (size),
         .valid (valid),
@@ -68,7 +58,7 @@ end
   wire stdout_ready;
   wire stdout_valid = (addr=='h3000) && valid && write;
   wire [7:0] stdout_data = wdata[7:0];
-tty_tx
+tty_tx #(400) // 200MHz / 500KHz 
 u_stdout (
 stdout_ready,
 stdout_valid,
@@ -77,11 +67,10 @@ stdout_data,
 rstb, clk
 );
 
-
   wire stdin_ready;
   wire stdin_valid = (addr=='h3004) && valid && ~write;
   wire [7:0] stdin_data;
-tty_rx
+tty_rx #(400) // 200MHz / 500KHz
 u_stdin (
 stdin_ready,
 stdin_valid,
@@ -89,46 +78,18 @@ stdin_data,
 stdin_rx,
 rstb, clk
 );
-/*
-reg [ 7:0] ram ['h1000:'h2000];
-reg ram_ready;
-reg [31:0] ram_rdata;
-always @(posedge clk or negedge rstb) begin
-    if(!rstb) begin
-      ram_ready <= 0;
-      $readmemh("helloworld.o.memh",ram);
-    end else begin
-      ram_ready <= valid;
-      if (valid) begin
-        if (write) begin
-            case(size)
-              0 : ram[addr] = wdata>>(8*addr[1:0]);
-              1 : {ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-              2 : {ram[addr+3],ram[addr+2],ram[addr+1],ram[addr]} = wdata>>(8*addr[1:0]);
-            endcase
-        end
-        else begin
-          ram_rdata <= {
-            ram[{addr[31:2],2'd3}], 
-            ram[{addr[31:2],2'd2}], 
-            ram[{addr[31:2],2'd1}], 
-            ram[{addr[31:2],2'd0}]
-            };
-        end
-      end
-    end
-end
-*/
+
 wire        ram_ready ;
 wire [31:0] ram_rdata ;
 wire [31:0] ram_wdata = wdata;
 wire        ram_write = write;
 wire [31:0] ram_addr  = addr -'h1000;
 wire [ 1:0] ram_size  = size[1:0];
-wire        ram_valid = ((addr >='h1000) && (addr <= 'h2000)) ? valid : 1'b0;
+wire        ram_valid = ((addr >='h1000) && (addr <'h2000)) ? valid : 1'b0;
 ram 
 #(
-  "helloworld.o.memh"
+  "helloworld.o_32.memh",
+  'h1000
 )
 u_ram (
   ram_ready, 
@@ -152,4 +113,5 @@ assign rdata =
 
 assign debug[0] = stdout_tx;
 assign debug[1] = stdin_rx;
+
 endmodule
