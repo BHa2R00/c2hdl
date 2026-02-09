@@ -28,6 +28,7 @@ Example:
 ### insertsort
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260205092200_977x160_scrot.png)
 ### quicksort
+![format](https://github.com/BHa2R00/c2hdl/raw/main/example/202602100041.gif)
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260205011808_980x275_scrot.png)
 ### tea
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260204204710_982x144_scrot.png)
