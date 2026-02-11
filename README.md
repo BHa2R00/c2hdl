@@ -20,6 +20,7 @@ Example:
 
 ## example
 ### prime number search
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260211213441_499x378_scrot.png)
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260211213225_969x236_scrot.png)
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/202602112127_2.gif)
 ### binarysearch
