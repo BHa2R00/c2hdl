@@ -19,6 +19,8 @@ Example:
 </pre>
 
 ## example
+### prime number search
+![format](https://github.com/BHa2R00/c2hdl/blob/main/example/202602112127_2.gif)
 ### binarysearch
 ![format](https://github.com/BHa2R00/c2hdl/blob/main/example/20260205111902_639x471_scrot.png)
 ### helloworld
